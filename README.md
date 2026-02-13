@@ -2,7 +2,11 @@
 
 Backoffice moderno para la gestión de leads y configuración del agente IA inmo24x7.
 
-![Dashboard Screenshot](screenshot.png)
+<div align="center">
+
+![Dashboard Screenshot](./src/assets/screens/inmo24x7-backoffice-screen.png)
+
+</div>
 
 ## 🚀 Tecnologías
 
