@@ -2,6 +2,8 @@
 
 Backoffice moderno para la gestión de leads y configuración del agente IA inmo24x7.
 
+![Dashboard Screenshot](screenshot.png)
+
 ## 🚀 Tecnologías
 
 - **React 18** - Framework UI
