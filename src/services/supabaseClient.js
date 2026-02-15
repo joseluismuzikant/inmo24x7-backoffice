@@ -14,7 +14,14 @@ if (isSupabaseAuthEnabled) {
     console.error('Supabase Auth is enabled but missing environment variables: VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY')
   } else {
     try {
-      supabase = createClient(supabaseUrl, supabaseAnonKey)
+      supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      });
+
     } catch (error) {
       console.error('Failed to initialize Supabase client:', error)
     }

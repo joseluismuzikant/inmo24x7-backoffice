@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { supabase } from './supabaseClient'
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -9,8 +10,20 @@ const api = axios.create({
   },
 })
 
+// Request interceptor to add Bearer token
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    // Get the current session from Supabase
+    if (supabase) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.access_token) {
+          config.headers.Authorization = `Bearer ${session.access_token}`
+        }
+      } catch (error) {
+        console.error('Error getting session:', error)
+      }
+    }
     return config
   },
   (error) => {
