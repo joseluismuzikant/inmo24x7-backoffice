@@ -108,6 +108,73 @@ npm run preview  # Previsualizar build de producción
 npm run lint     # Ejecutar linter
 ```
 
+## 🐳 Docker Deployment
+
+### Construir imagen localmente:
+
+```bash
+# Opción 1: Con build-args explícitos
+docker build \
+  --build-arg VITE_SUPABASE_URL=https://your-project.supabase.co \
+  --build-arg VITE_SUPABASE_ANON_KEY=your-anon-key \
+  --build-arg VITE_API_URL=http://localhost:3000 \
+  --build-arg VITE_USE_SUPABASE_AUTH=false \
+  -t inmo24x7-backoffice .
+
+# Opción 2: Usando archivo .env
+docker build --build-arg $(cat .env | xargs) -t inmo24x7-backoffice .
+```
+
+### Ejecutar contenedor:
+
+```bash
+docker run -p 80:80 inmo24x7-backoffice
+```
+
+La aplicación estará disponible en `http://localhost`
+
+### Docker Compose:
+
+```bash
+# Crear archivo .env con las variables
+nano .env
+
+# Ejecutar con Docker Compose
+docker-compose up -d
+```
+
+## 🚀 CI/CD - GitHub Actions + Digital Ocean
+
+El proyecto incluye un workflow de GitHub Actions que:
+1. Compila la aplicación con las variables de entorno
+2. Crea una imagen Docker
+3. Publica en GitHub Container Registry (ghcr.io)
+4. **Deploy manual en Digital Ocean** (requiere aprobación)
+
+### Configuración:
+
+1. Ve a **Settings > Secrets and variables > Actions** en tu repo de GitHub
+2. Agrega estos secrets:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_API_URL`
+   - `VITE_USE_SUPABASE_AUTH`
+   - `DIGITALOCEAN_HOST` (IP o dominio de tu droplet)
+   - `DIGITALOCEAN_SSH_KEY` (clave SSH privada para conexión)
+   - `DIGITALOCEAN_USER` (usuario SSH, típicamente `root`)
+
+### Uso:
+
+El workflow se ejecuta automáticamente en cada push a `main`. Una vez que el build es exitoso, podrás ver una notificación en GitHub para **aprobar el deployment manual** en Digital Ocean.
+
+Para desplegar manualmente desde GitHub:
+1. Ve a la pestaña **Actions** en tu repo
+2. Selecciona el workflow **"Build and Deploy to Digital Ocean"**
+3. Haz clic en **"Run workflow"**
+4. Selecciona la rama (usualmente `main`)
+5. El workflow hará el build y esperará tu aprobación para el deploy
+6. Revisa el build y haz clic en **"Approve"** para desplegar en Digital Ocean
+
 ## 📄 Licencia
 
 Proyecto privado - Inmo24x7
