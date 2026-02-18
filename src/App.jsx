@@ -41,10 +41,10 @@ const ProtectedRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-600 font-medium">Cargando...</p>
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner" />
+          <p className="loading-text">Cargando...</p>
         </div>
       </div>
     )
@@ -83,10 +83,10 @@ const PublicRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-600 font-medium">Cargando...</p>
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner" />
+          <p className="loading-text">Cargando...</p>
         </div>
       </div>
     )

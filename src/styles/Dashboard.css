@@ -1,0 +1,272 @@
+/* Dashboard Component Styles */
+.dashboard-container {
+  @apply max-w-7xl mx-auto;
+}
+
+.dashboard-header {
+  @apply flex justify-between items-center mb-8;
+}
+
+.dashboard-title {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.dashboard-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8;
+}
+
+.dashboard-section-title {
+  @apply text-lg font-semibold mb-4 flex items-center gap-2;
+}
+
+.upload-zone {
+  @apply border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200;
+}
+
+.upload-zone-dragging {
+  @apply border-brand-blue bg-blue-50;
+}
+
+.upload-zone-default {
+  @apply border-gray-300 hover:border-gray-400 bg-gray-50;
+}
+
+.upload-icon-container {
+  @apply w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center;
+}
+
+.upload-text {
+  @apply text-gray-600 mb-2;
+}
+
+.upload-subtext {
+  @apply text-sm text-gray-400 mb-4;
+}
+
+.file-list {
+  @apply mt-4 space-y-2;
+}
+
+.file-item {
+  @apply flex items-center justify-between p-3 bg-gray-50 rounded-lg;
+}
+
+.file-item-content {
+  @apply flex items-center gap-3;
+}
+
+.file-item-icon {
+  @apply text-brand-green;
+}
+
+.file-item-name {
+  @apply text-sm font-medium;
+}
+
+.file-status-processed {
+  @apply flex items-center gap-1 text-xs text-brand-green;
+}
+
+.file-status-processing {
+  @apply text-xs text-gray-500;
+}
+
+.file-remove-btn {
+  @apply text-gray-400 hover:text-red-500 transition-colors;
+}
+
+.notification-item {
+  @apply flex items-center justify-between p-4 bg-gray-50 rounded-lg;
+}
+
+.notification-content {
+  @apply flex items-center gap-3;
+}
+
+.notification-icon-container {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center;
+}
+
+.notification-icon-container-green {
+  @apply bg-green-100;
+}
+
+.notification-icon-container-blue {
+  @apply bg-blue-100;
+}
+
+.notification-icon-container-purple {
+  @apply bg-purple-100;
+}
+
+.notification-icon-green {
+  @apply text-brand-green;
+}
+
+.notification-icon-blue {
+  @apply text-brand-blue;
+}
+
+.notification-icon-purple {
+  @apply text-purple-600;
+}
+
+.notification-text {
+  @apply font-medium;
+}
+
+.notification-subtext {
+  @apply text-sm text-gray-500;
+}
+
+.toggle-btn {
+  @apply relative w-12 h-6 rounded-full transition-colors;
+}
+
+.toggle-btn-on {
+  @apply bg-brand-green;
+}
+
+.toggle-btn-off {
+  @apply bg-gray-300;
+}
+
+.toggle-indicator {
+  @apply absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform;
+}
+
+.toggle-indicator-on {
+  @apply translate-x-6;
+}
+
+.toggle-indicator-off {
+  @apply translate-x-0;
+}
+
+.notification-input {
+  @apply input-field text-sm;
+}
+
+.connected-badge {
+  @apply text-xs text-green-600 font-medium;
+}
+
+.leads-section {
+  @apply flex justify-between items-center mb-6;
+}
+
+.leads-section-title {
+  @apply text-lg font-semibold flex items-center gap-2;
+}
+
+.refresh-btn {
+  @apply text-sm text-brand-blue hover:text-brand-blue-dark font-medium;
+}
+
+.leads-loading {
+  @apply text-center py-12;
+}
+
+.leads-spinner {
+  @apply w-8 h-8 border-4 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-4;
+}
+
+.leads-loading-text {
+  @apply text-gray-500;
+}
+
+.leads-empty {
+  @apply text-center py-12 text-gray-500;
+}
+
+.leads-empty-icon {
+  @apply mx-auto mb-4 opacity-30;
+}
+
+.leads-table-container {
+  @apply overflow-x-auto;
+}
+
+.leads-table {
+  @apply w-full;
+}
+
+.leads-table-header {
+  @apply border-b border-gray-200;
+}
+
+.leads-table-header-cell {
+  @apply text-left py-3 px-4 font-medium text-gray-700;
+}
+
+.leads-table-header-cell-right {
+  @apply text-right py-3 px-4 font-medium text-gray-700;
+}
+
+.leads-table-row {
+  @apply border-b border-gray-100 hover:bg-gray-50;
+}
+
+.leads-table-cell {
+  @apply py-4 px-4;
+}
+
+.leads-table-cell-gray {
+  @apply py-4 px-4 text-gray-600;
+}
+
+.leads-table-cell-capitalize {
+  @apply py-4 px-4 font-medium capitalize;
+}
+
+.leads-badge {
+  @apply inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full;
+}
+
+.leads-badge-venta {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.leads-badge-alquiler {
+  @apply bg-purple-100 text-purple-700;
+}
+
+.leads-delete-btn {
+  @apply p-2 text-gray-400 hover:text-red-500 transition-colors;
+}
+
+.pagination-container {
+  @apply flex items-center justify-between mt-6 pt-4 border-t border-gray-200;
+}
+
+.pagination-info {
+  @apply text-sm text-gray-500;
+}
+
+.pagination-info-bold {
+  @apply font-medium;
+}
+
+.pagination-controls {
+  @apply flex items-center gap-2;
+}
+
+.pagination-btn {
+  @apply p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+}
+
+.pagination-pages {
+  @apply flex items-center gap-1;
+}
+
+.pagination-page-btn {
+  @apply w-9 h-9 rounded-lg text-sm font-medium transition-colors;
+}
+
+.pagination-page-btn-active {
+  @apply bg-brand-blue text-white;
+}
+
+.pagination-page-btn-inactive {
+  @apply border border-gray-300 hover:bg-gray-50 text-gray-700;
+}

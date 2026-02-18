@@ -1,0 +1,12 @@
+/* Layout Component Styles */
+.layout-container {
+  @apply flex min-h-screen bg-gray-50;
+}
+
+.layout-main {
+  @apply flex-1 overflow-auto;
+}
+
+.layout-content {
+  @apply p-8;
+}

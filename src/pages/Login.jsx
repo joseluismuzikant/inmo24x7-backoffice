@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signInWithEmail } from '../services/supabaseClient'
+import '../styles/Login.css'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -35,26 +36,26 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-blue to-brand-blue-dark">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">
-              <span className="text-brand-blue">inmo</span>
-              <span className="text-brand-green">24x7</span>
+    <div className="login-container">
+      <div className="login-card-wrapper">
+        <div className="login-card">
+          <div className="login-header">
+            <h1 className="login-logo">
+              <span className="login-logo-blue">inmo</span>
+              <span className="login-logo-green">24x7</span>
             </h1>
-            <p className="text-gray-500">Backoffice de Administración</p>
+            <p className="login-subtitle">Backoffice de Administración</p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="login-error">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="login-form-group">
+              <label className="login-label">
                 Correo electrónico
               </label>
               <input
@@ -67,8 +68,8 @@ const Login = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="login-form-group">
+              <label className="login-label">
                 Contraseña
               </label>
               <input
@@ -84,18 +85,18 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              className="login-btn"
             >
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
+          <div className="login-footer">
             <p>Sistema exclusivo para administradores</p>
           </div>
         </div>
 
-        <div className="text-center mt-8 text-white/70 text-sm">
+        <div className="login-copyright">
           <p>© 2024 Inmo24x7. Todos los derechos reservados.</p>
         </div>
       </div>
