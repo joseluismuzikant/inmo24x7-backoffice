@@ -1,138 +1,98 @@
-name: Build and Deploy to Digital Ocean
+name: Backoffice - Build (auto) + Deploy (manual)
 
 on:
   push:
-    branches: [ main, master ]
+    branches: ["main"]
+
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
+      tag:
+        description: "Image tag to deploy (latest o sha-<commit>)"
+        required: false
+        default: "latest"
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
+  IMAGE_NAME: ${{ github.repository }}       # ej: joseluismuzikant/inmo24x7-backoffice
+  CONTAINER_NAME: inmo24x7-backoffice
+  HOST_PORT: "3001"                          # puerto local en el droplet
+  CONTAINER_PORT: "80"                       # puerto interno del container (nginx)
 jobs:
-  # Job 1: Build and test
   build:
+    name: Build & Push to GHCR
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ github.token }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image
+      - name: Build & Push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
           build-args: |
-            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
-            VITE_USE_SUPABASE_AUTH=${{ secrets.VITE_USE_SUPABASE_AUTH }}
+            VITE_SUPABASE_URL=${{ vars.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ vars.VITE_SUPABASE_ANON_KEY }}
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_USE_SUPABASE_AUTH=${{ vars.VITE_USE_SUPABASE_AUTH }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Show build info
-        run: |
-          echo "✅ Build completed successfully!"
-          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-
-  # Job 2: Wait for manual approval before deploying
-  deploy-approval:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: 
-      name: ${{ github.event.inputs.environment || 'production' }}
-      url: https://${{ secrets.DIGITALOCEAN_HOST }}
-    
-    steps:
-      - name: Deployment approved
-        run: |
-          echo "✅ Deployment approved!"
-          echo "🚀 Starting deployment to Digital Ocean..."
-
-  # Job 3: Deploy to Digital Ocean
   deploy:
-    needs: [build, deploy-approval]
+    name: Deploy to DigitalOcean (manual)
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    
+    environment: prod
+    permissions:
+      contents: read
+      packages: read
+
     steps:
-      - name: Deploy to Digital Ocean via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.DIGITALOCEAN_HOST }}
-          username: ${{ secrets.DIGITALOCEAN_USER }}
+          username: ${{ secrets.DIGITALOCEAN_USERNAME }}
           key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
           script: |
-            echo "🔄 Pulling latest image..."
-            
-            # Login to GitHub Container Registry
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # Pull latest image
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            
-            # Stop and remove existing container
-            docker stop inmo24x7-backoffice || true
-            docker rm inmo24x7-backoffice || true
-            
-            # Run new container
+            set -euo pipefail
+
+            TAG="${{ inputs.tag }}"
+            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+
+            echo "Deploying ${IMAGE}"
+
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
+
+            docker pull "${IMAGE}"
+
+            docker stop "${{ env.CONTAINER_NAME }}" || true
+            docker rm "${{ env.CONTAINER_NAME }}" || true
+
+            # IMPORTANTE: no uses -p 80:80 porque Caddy ya está en 80/443
             docker run -d \
-              --name inmo24x7-backoffice \
+              --name "${{ env.CONTAINER_NAME }}" \
               --restart unless-stopped \
-              -p 80:80 \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            
-            # Cleanup old images
-            docker image prune -af --filter "until=168h"
-            
-            echo "✅ Deployment completed!"
-            echo "🌐 Application available at: http://${{ secrets.DIGITALOCEAN_HOST }}"
+              -p "127.0.0.1:${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }}" \
+              "${IMAGE}"
 
-      - name: Verify deployment
-        run: |
-          echo "⏳ Waiting for container to start..."
-          sleep 5
-          echo "✅ Deployment verification complete"
-
-  # Job 4: Notify on failure
-  notify-failure:
-    needs: [build, deploy]
-    if: failure()
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Notify failure
-        run: |
-          echo "❌ Deployment failed!"
-          echo "Please check the logs above for more details."
+            docker image prune -f
+            docker ps --filter "name=${{ env.CONTAINER_NAME }}"
