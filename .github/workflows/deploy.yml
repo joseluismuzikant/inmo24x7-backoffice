@@ -1,4 +1,4 @@
-name: Backoffice - Build (auto) + Deploy (manual)
+name: Backoffice - Build (auto) + Deploy to DigitalOcean (manual)
 
 on:
   push:
@@ -13,25 +13,25 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}       # ej: joseluismuzikant/inmo24x7-backoffice
+  IMAGE_NAME: ${{ github.repository }}     # joseluismuzikant/inmo24x7-backoffice
   CONTAINER_NAME: inmo24x7-backoffice
-  HOST_PORT: "3001"                          # puerto local en el droplet
-  CONTAINER_PORT: "80"                       # puerto interno del container (nginx)
+  HOST_PORT: "3001"                        # puerto local en el droplet
+  CONTAINER_PORT: "80"                     # el container expone 80 (Caddy interno) :contentReference[oaicite:1]{index=1}
+
 jobs:
   build:
     name: Build & Push to GHCR
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: prod
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -70,24 +70,22 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.DIGITALOCEAN_HOST }}
-          username: ${{ secrets.DIGITALOCEAN_USERNAME }}
+          username: ${{ secrets.DIGITALOCEAN_USERNAME }}   # root
           key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
           script: |
             set -euo pipefail
 
             TAG="${{ inputs.tag }}"
             IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-
             echo "Deploying ${IMAGE}"
 
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
-
             docker pull "${IMAGE}"
 
             docker stop "${{ env.CONTAINER_NAME }}" || true
             docker rm "${{ env.CONTAINER_NAME }}" || true
 
-            # IMPORTANTE: no uses -p 80:80 porque Caddy ya está en 80/443
+            # IMPORTANTE: bind solo en localhost para no exponer el puerto
             docker run -d \
               --name "${{ env.CONTAINER_NAME }}" \
               --restart unless-stopped \
