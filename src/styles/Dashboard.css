@@ -270,3 +270,16 @@
 .pagination-page-btn-inactive {
   @apply border border-gray-300 hover:bg-gray-50 text-gray-700;
 }
+
+/* Logout Button */
+.logout-button-container {
+  @apply fixed bottom-6 left-72 z-40;
+}
+
+.logout-button {
+  @apply flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-all duration-200;
+}
+
+.logout-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
