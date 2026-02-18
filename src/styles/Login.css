@@ -1,10 +1,19 @@
 /* Login Component Styles */
 .login-container {
-  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-blue to-brand-blue-dark;
+  @apply min-h-screen flex items-center justify-center relative;
+  background-image: url('../assets/images/real-estate-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.login-container::before {
+  content: '';
+  @apply absolute inset-0 bg-black/40;
 }
 
 .login-card-wrapper {
-  @apply w-full max-w-md;
+  @apply w-full max-w-md relative z-10;
 }
 
 .login-card {
