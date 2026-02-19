@@ -10,7 +10,7 @@ const api = axios.create({
   },
 })
 
-// Request interceptor to add Bearer token
+// Request interceptor to add Bearer token and source type
 api.interceptors.request.use(
   async (config) => {
     // Get the current session from Supabase
@@ -24,6 +24,10 @@ api.interceptors.request.use(
         console.error('Error getting session:', error)
       }
     }
+    
+    // Add source type header to identify backoffice requests
+    config.headers['X-Source-Type'] = 'backoffice'
+    
     return config
   },
   (error) => {
