@@ -46,20 +46,20 @@ api.interceptors.response.use(
 export const getLeads = async () => {
   try {
     const response = await api.get('/api/leads')
-    // Ensure we always return an array
     const data = response.data
-    if (Array.isArray(data)) {
-      return data
-    } else if (data && typeof data === 'object' && Array.isArray(data.leads)) {
-      // Handle response format: { leads: [...] }
-      return data.leads
-    } else if (data && typeof data === 'object' && Array.isArray(data.data)) {
-      // Handle response format: { data: [...] }
-      return data.data
-    } else {
-      console.warn('API response is not an array:', data)
-      return []
-    }
+    
+    const leadsArray = Array.isArray(data) 
+      ? data 
+      : data?.leads || data?.data || []
+
+    return leadsArray.map(lead => ({
+      ...lead,
+      createdAt: lead.created_at,
+      updatedAt: lead.updated_at,
+      presupuestoMax: lead.presupuesto_max,
+      visitorId: lead.visitor_id,
+      sourceType: lead.source_type,
+    }))
   } catch (error) {
     console.error('Error in getLeads:', error)
     return []
