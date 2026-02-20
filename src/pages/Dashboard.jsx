@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
-import { FileText, Trash2, Upload, Smartphone, Mail, Calendar, Play, FileSpreadsheet, FileJson, CheckCircle2, X, ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
+import { FileText, Trash2, Upload, Smartphone, Mail, Calendar, Play, FileSpreadsheet, FileJson, CheckCircle2, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ChatSimulator from '../components/ChatSimulator'
 import { getLeads, deleteLead } from '../services/api'
-import { signOut } from '../services/supabaseClient'
-import '../styles/Dashboard.css'
 
-// Check if Supabase Auth is enabled via environment variable
-const isSupabaseAuthEnabled = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true'
+import '../styles/Dashboard.css'
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -23,8 +20,6 @@ const Dashboard = () => {
     calendar: false
   })
   const [whatsappNumber, setWhatsappNumber] = useState('+54 9 11')
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
-  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
@@ -142,21 +137,6 @@ const Dashboard = () => {
       ...prev,
       [channel]: !prev[channel]
     }))
-  }
-
-  const handleLogout = async () => {
-    // If auth is disabled, just redirect to home (no actual logout needed)
-    if (!isSupabaseAuthEnabled) {
-      navigate('/')
-      return
-    }
-
-    setIsLoggingOut(true)
-    const { error } = await signOut()
-    if (!error) {
-      navigate('/login')
-    }
-    setIsLoggingOut(false)
   }
 
   return (
@@ -479,18 +459,6 @@ const Dashboard = () => {
 
       <ChatSimulator isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
-      {isSupabaseAuthEnabled && (
-        <div className="logout-button-container">
-          <button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="logout-button"
-          >
-            <LogOut size={20} />
-            <span>{isLoggingOut ? 'Cerrando...' : 'Cerrar Sesión'}</span>
-          </button>
-        </div>
-      )}
     </Layout>
   )
 }

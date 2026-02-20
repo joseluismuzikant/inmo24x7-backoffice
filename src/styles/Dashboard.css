@@ -4,7 +4,7 @@
 }
 
 .dashboard-header {
-  @apply flex justify-between items-center mb-8;
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8;
 }
 
 .dashboard-title {
@@ -12,7 +12,7 @@
 }
 
 .dashboard-grid {
-  @apply grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8;
+  @apply grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8;
 }
 
 .dashboard-section-title {
@@ -20,7 +20,7 @@
 }
 
 .upload-zone {
-  @apply border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200;
+  @apply border-2 border-dashed rounded-xl p-4 md:p-8 text-center transition-all duration-200;
 }
 
 .upload-zone-dragging {
@@ -152,7 +152,7 @@
 }
 
 .leads-section {
-  @apply flex justify-between items-center mb-6;
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6;
 }
 
 .leads-section-title {
@@ -236,7 +236,7 @@
 }
 
 .pagination-container {
-  @apply flex items-center justify-between mt-6 pt-4 border-t border-gray-200;
+  @apply flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200;
 }
 
 .pagination-info {
@@ -271,15 +271,17 @@
   @apply border border-gray-300 hover:bg-gray-50 text-gray-700;
 }
 
-/* Logout Button */
-.logout-button-container {
-  @apply fixed bottom-6 left-72 z-40;
-}
-
-.logout-button {
-  @apply flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-all duration-200;
-}
-
-.logout-button:disabled {
-  @apply opacity-50 cursor-not-allowed;
+/* Mobile Responsive Adjustments */
+@media (max-width: 640px) {
+  .dashboard-title {
+    @apply text-xl;
+  }
+  
+  .leads-table-header-cell,
+  .leads-table-header-cell-right,
+  .leads-table-cell,
+  .leads-table-cell-gray,
+  .leads-table-cell-capitalize {
+    @apply py-2 px-2 text-sm;
+  }
 }

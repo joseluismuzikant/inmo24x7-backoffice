@@ -1,6 +1,6 @@
 /* Layout Component Styles */
 .layout-container {
-  @apply flex min-h-screen bg-gray-50;
+  @apply flex min-h-screen bg-gray-50 relative;
 }
 
 .layout-main {
@@ -8,5 +8,5 @@
 }
 
 .layout-content {
-  @apply p-8;
+  @apply p-4 md:p-6 lg:p-8;
 }
