@@ -67,6 +67,28 @@ const ChatSimulator = ({ isOpen, onClose }) => {
     }
   }
 
+  const renderContentWithLinks = (content) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const parts = content.split(urlRegex)
+    
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="chat-message-link"
+          >
+            {part}
+          </a>
+        )
+      }
+      return part
+    })
+  }
+
   if (!isOpen) return null
 
   return (
@@ -112,7 +134,7 @@ const ChatSimulator = ({ isOpen, onClose }) => {
                   {message.role === 'assistant' ? 'Agente IA' : 'Cliente'}
                 </span>
               </div>
-              <p className="chat-message-text">{message.content}</p>
+              <p className="chat-message-text">{renderContentWithLinks(message.content)}</p>
             </div>
           </div>
         ))}
