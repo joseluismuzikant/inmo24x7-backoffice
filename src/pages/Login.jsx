@@ -35,6 +35,7 @@ const Login = () => {
     }
   }
 
+
   return (
     <div className="login-container">
       <div className="login-card-wrapper">
@@ -92,7 +93,7 @@ const Login = () => {
           </form>
 
           <div className="login-footer">
-            <p>Sistema exclusivo para administradores</p>
+            <p>Acceso al backoffice de tenants y administracion</p>
           </div>
         </div>
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Database, BookOpen, Settings, LogOut, Menu, X } from 'lucide-react'
+import { Building2, Database, BellRing, LogOut, Menu, X, Users, PlusSquare, FileText } from 'lucide-react'
 import { signOut } from '../services/supabaseClient'
+import { useAuth } from '../context/AuthContext'
 import '../styles/Sidebar.css'
 
 // Check if Supabase Auth is enabled via environment variable
@@ -9,6 +10,7 @@ const isSupabaseAuthEnabled = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true'
 
 const Sidebar = () => {
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -41,12 +43,18 @@ const Sidebar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
-  const menuItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/propiedades', icon: Database, label: 'Propiedades' },
-    { to: '/conocimiento', icon: BookOpen, label: 'Base de Conocimiento' },
-    { to: '/configuracion', icon: Settings, label: 'Configuración' },
-  ]
+  const menuItems = isAdmin
+    ? [
+        { to: '/admin/tenants', icon: Building2, label: 'Tenants' },
+        { to: '/admin/tenants/new', icon: PlusSquare, label: 'Crear tenant' },
+        { to: '/admin/leads', icon: FileText, label: 'Leads' },
+        { to: '/admin/properties', icon: Users, label: 'Propiedades' },
+      ]
+    : [
+        { to: '/leads', icon: FileText, label: 'Leads' },
+        { to: '/properties', icon: Database, label: 'Propiedades' },
+        { to: '/notifications', icon: BellRing, label: 'Notificaciones' },
+      ]
 
   return (
     <>

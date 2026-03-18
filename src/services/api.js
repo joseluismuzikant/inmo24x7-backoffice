@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { supabase } from './supabaseClient'
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiUrl = import.meta.env.VITE_API_URL || 'https://api.inmo24x7.com'
 
 const api = axios.create({
   baseURL: apiUrl,
@@ -63,6 +63,65 @@ export const getLeads = async () => {
   } catch (error) {
     console.error('Error in getLeads:', error)
     return []
+  }
+}
+
+export const getProfile = async () => {
+  const response = await api.get('/api/profile')
+  return response.data?.profile || response.data?.data || response.data
+}
+
+export const normalizePaginatedResponse = (data, fallbackPage = 1, fallbackPageSize = 10) => {
+  const isArray = Array.isArray(data)
+  if (isArray) {
+    return {
+      items: data,
+      total: data.length,
+      page: fallbackPage,
+      pageSize: fallbackPageSize,
+    }
+  }
+
+  const candidates = [
+    data?.items,
+    data?.data,
+    data?.results,
+    data?.leads,
+    data?.properties,
+    data?.tenants,
+    data?.rows,
+  ]
+
+  const firstArray = candidates.find((candidate) => Array.isArray(candidate))
+  let items = firstArray || []
+
+  if (!items.length && data && typeof data === 'object') {
+    const nestedArray = Object.values(data).find((value) => Array.isArray(value))
+    if (Array.isArray(nestedArray)) {
+      items = nestedArray
+    }
+  }
+
+  const total =
+    data?.total ??
+    data?.count ??
+    data?.pagination?.total ??
+    data?.meta?.total ??
+    items.length
+  const page = data?.page ?? data?.pagination?.page ?? data?.meta?.page ?? fallbackPage
+  const pageSize =
+    data?.pageSize ??
+    data?.page_size ??
+    data?.limit ??
+    data?.pagination?.pageSize ??
+    data?.pagination?.limit ??
+    fallbackPageSize
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
   }
 }
 
