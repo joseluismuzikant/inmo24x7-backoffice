@@ -73,7 +73,7 @@ const ChatSimulator = ({ isOpen, onClose }) => {
     
     return parts.map((part, index) => {
       if (urlRegex.test(part)) {
-        return (
+        return 
           <a
             key={index}
             href={part}
@@ -83,7 +83,6 @@ const ChatSimulator = ({ isOpen, onClose }) => {
           >
             {part}
           </a>
-        )
       }
       return part
     })
