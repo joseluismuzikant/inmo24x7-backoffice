@@ -1,20 +1,36 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
 import AdminTenants from './pages/AdminTenants'
+import AdminTenantCreate from './pages/AdminTenantCreate'
+import AdminLeads from './pages/AdminLeads'
+import AdminProperties from './pages/AdminProperties'
+import TenantLeads from './pages/TenantLeads'
+import TenantProperties from './pages/TenantProperties'
+import TenantNotifications from './pages/TenantNotifications'
+import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
+import TenantRoute from './components/TenantRoute'
+import AppRedirect from './components/AppRedirect'
 import { useAuth } from './context/AuthContext'
 
-const AdminRoute = ({ children }) => {
-  const { profile, isLoading } = useAuth()
-  if (isLoading) return <div>Cargando...</div>
-  if (!profile || !profile.is_admin) return <Navigate to="/" replace />
-  return children
-}
+const PublicRoute = ({ children }) => {
+  const { loading, user } = useAuth()
 
-const ProtectedRoute = ({ children }) => {
-  const { user, isLoading } = useAuth()
-  if (isLoading) return <div>Cargando...</div>
-  if (!user) return <Navigate to="/login" replace />
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner" />
+          <p className="loading-text">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (user) {
+    return <Navigate to="/" replace />
+  }
+
   return children
 }
 
@@ -22,17 +38,101 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin/tenants" element={
-            <AdminRoute>
-                <AdminTenants />
-            </AdminRoute>
-        } />
-        <Route path="/" element={
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/"
+          element={
             <ProtectedRoute>
-                <Dashboard />
+              <AppRedirect />
             </ProtectedRoute>
-        } />
+          }
+        />
+
+        <Route
+          path="/admin/tenants"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminTenants />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/tenants/new"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminTenantCreate />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/leads"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminLeads />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/properties"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminProperties />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/leads"
+          element={
+            <ProtectedRoute>
+              <TenantRoute>
+                <TenantLeads />
+              </TenantRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/properties"
+          element={
+            <ProtectedRoute>
+              <TenantRoute>
+                <TenantProperties />
+              </TenantRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <TenantRoute>
+                <TenantNotifications />
+              </TenantRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+        <Route path="/propiedades" element={<Navigate to="/properties" replace />} />
+        <Route path="/conocimiento" element={<Navigate to="/notifications" replace />} />
+        <Route path="/configuracion" element={<Navigate to="/notifications" replace />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

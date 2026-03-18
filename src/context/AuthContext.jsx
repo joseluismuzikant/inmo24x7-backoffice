@@ -1,64 +1,187 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUser, onAuthStateChange } from '../services/supabaseClient';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { getCurrentUser, onAuthStateChange } from '../services/supabaseClient'
+import { getProfile } from '../services/api'
 
-const AuthContext = createContext(null);
+const isSupabaseAuthEnabled = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true'
+const PROFILE_CACHE_KEY = 'backoffice_profile_cache_v1'
+
+const AuthContext = createContext(null)
+
+const normalizeProfile = (profileData, user) => ({
+  id: user?.id || profileData?.id || null,
+  email: user?.email || profileData?.email || null,
+  tenant_id: profileData?.tenant_id || null,
+  role: profileData?.role || null,
+  is_admin: Boolean(profileData?.is_admin),
+})
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const currentUserIdRef = useRef(null)
+  const initializedRef = useRef(false)
+
+  const writeProfileCache = useCallback((nextProfile) => {
+    if (!nextProfile?.id) {
+      return
+    }
+
+    try {
+      localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(nextProfile))
+    } catch (_error) {
+      // ignore cache errors
+    }
+  }, [])
+
+  const loadCachedProfile = useCallback((userId) => {
+    if (!userId) {
+      return null
+    }
+
+    try {
+      const raw = localStorage.getItem(PROFILE_CACHE_KEY)
+      if (!raw) {
+        return null
+      }
+
+      const parsed = JSON.parse(raw)
+      if (parsed?.id === userId) {
+        return parsed
+      }
+      return null
+    } catch (_error) {
+      return null
+    }
+  }, [])
+
+  const loadProfile = useCallback(async (sessionUser) => {
+    if (!sessionUser) {
+      currentUserIdRef.current = null
+      setUser(null)
+      setProfile(null)
+      setError(null)
+      return
+    }
+
+    currentUserIdRef.current = sessionUser.id
+    setUser(sessionUser)
+    setError(null)
+
+    const cachedProfile = loadCachedProfile(sessionUser.id)
+    if (cachedProfile) {
+      setProfile(cachedProfile)
+    }
+
+    try {
+      const profileData = await getProfile()
+      const nextProfile = normalizeProfile(profileData, sessionUser)
+      if (!nextProfile.tenant_id && !nextProfile.is_admin) {
+        setError('No se pudo resolver tenant_id para este usuario')
+      }
+      setProfile(nextProfile)
+      writeProfileCache(nextProfile)
+    } catch (profileError) {
+      if (!isSupabaseAuthEnabled) {
+        const fallbackProfile = normalizeProfile(
+          {
+            is_admin: true,
+            role: 'admin',
+          },
+          sessionUser,
+        )
+        setProfile(fallbackProfile)
+        writeProfileCache(fallbackProfile)
+        setError(null)
+      } else {
+        setProfile(normalizeProfile({}, sessionUser))
+        setError(profileError?.response?.data?.error || profileError.message || 'No se pudo cargar el perfil')
+      }
+    }
+  }, [loadCachedProfile, writeProfileCache])
 
   useEffect(() => {
-    const initAuth = async () => {
-      const { user } = await getCurrentUser();
-      if (user) {
-        await fetchProfile(user);
-      }
-      setIsLoading(false);
-    };
+    let mounted = true
 
-    initAuth();
+    const bootstrap = async () => {
+      setLoading(true)
+      try {
+        const { user: currentUser } = await getCurrentUser()
+        if (!mounted) {
+          return
+        }
 
-    const subscription = onAuthStateChange((event, session) => {
-      if (session?.user) {
-        fetchProfile(session.user);
-      } else {
-        setUser(null);
-        setProfile(null);
+        await loadProfile(currentUser)
+      } catch (bootstrapError) {
+        if (mounted) {
+          setError(bootstrapError.message || 'Error de autenticacion')
+          setUser(null)
+          setProfile(null)
+        }
+      } finally {
+        if (mounted) {
+          initializedRef.current = true
+          setLoading(false)
+        }
       }
-    });
+    }
+
+    bootstrap()
+
+    const subscription = onAuthStateChange(async (_event, session) => {
+      if (!mounted) {
+        return
+      }
+
+      const nextUser = session?.user || null
+      const isSameUser = nextUser?.id && nextUser.id === currentUserIdRef.current
+      if (_event === 'TOKEN_REFRESHED' || (_event === 'INITIAL_SESSION' && initializedRef.current && isSameUser)) {
+        return
+      }
+
+      if (!initializedRef.current) {
+        setLoading(true)
+      }
+
+      await loadProfile(nextUser)
+      if (mounted) {
+        initializedRef.current = true
+        setLoading(false)
+      }
+    })
 
     return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const fetchProfile = async (user) => {
-    setUser(user);
-    try {
-      // Assuming a backend endpoint exists to get the profile. 
-      // If not, we will need to implement this.
-      const response = await fetch('/api/profile', {
-        headers: { 'Authorization': `Bearer ${user.id}` } // Simplified
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProfile({
-            ...data,
-            id: user.id,
-            email: user.email
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching profile', err);
+      mounted = false
+      subscription.unsubscribe()
     }
-  };
+  }, [loadProfile])
 
-  return (
-    <AuthContext.Provider value={{ user, profile, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  const refreshProfile = useCallback(async () => {
+    await loadProfile(user)
+  }, [loadProfile, user])
 
-export const useAuth = () => useContext(AuthContext);
+  const value = useMemo(
+    () => ({
+      user,
+      profile,
+      isAdmin: Boolean(profile?.is_admin),
+      tenantId: profile?.tenant_id || null,
+      role: profile?.is_admin ? 'Admin' : profile?.role || null,
+      loading,
+      error,
+      refreshProfile,
+    }),
+    [user, profile, loading, error, refreshProfile],
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context
+}

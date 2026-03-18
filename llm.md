@@ -412,4 +412,4 @@ Tenant user:
 - all paginated where applicable
 
 Please work directly on the real project files and keep the implementation simple and clean.
-
+ 

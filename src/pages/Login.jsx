@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signInWithEmail } from '../services/supabaseClient'
-import { useAuth } from '../context/AuthContext'
 import '../styles/Login.css'
 
 const Login = () => {
   const navigate = useNavigate()
-  const { profile } = useAuth() // We don't really have a function to force re-fetch here yet
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -28,8 +26,6 @@ const Login = () => {
       }
 
       if (data.user) {
-        // Upon login, we need to ensure profile is fetched. 
-        // AuthContext will handle this via auth state change.
         navigate('/')
       }
     } catch (err) {
@@ -97,7 +93,7 @@ const Login = () => {
           </form>
 
           <div className="login-footer">
-            <p>Sistema exclusivo para administradores</p>
+            <p>Acceso al backoffice de tenants y administracion</p>
           </div>
         </div>
 
