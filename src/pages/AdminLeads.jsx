@@ -19,7 +19,7 @@ const AdminLeads = () => {
   useEffect(() => {
     const loadTenants = async () => {
       try {
-        const result = await getTenants({ page: 1, pageSize: 200 })
+        const result = await getTenants({ page: 1, pageSize: 50 })
         setTenants(result.items || [])
       } catch (_error) {
         setTenants([])

@@ -1,111 +1,173 @@
-I want to evolve this backoffice into a dual-mode app:
+Please update the real project files of this backoffice to evolve it into a clean dual-mode app with minimum-change architecture.
+
+Project goal:
+Turn the current React backoffice into:
 
 1. Admin mode
 2. Tenant mode
 
-Current context:
-- React backoffice
-- Supabase auth already exists
-- backend already supports:
-  - profiles with:
-    - tenant_id
-    - role
-    - is_admin
-  - admin onboarding endpoints
-  - tenant_channels
+Important constraints:
+- Keep current login/auth flow working
+- Do NOT do a big rewrite
+- Prefer incremental, production-friendly changes
+- Reuse existing backend endpoints where possible
+- Only add minimal backend changes when strictly needed
+- Respect existing auth/profile model:
+  - tenant_id
+  - role
+  - is_admin
+
+==================================================
+1) FIRST: ANALYZE CURRENT CODEBASE BEFORE CHANGING
+==================================================
+
+Before coding, inspect the existing project structure and identify:
+
+- current auth flow
+- current router setup
+- current dashboard/pages
+- current API service files
+- current session/profile loading
+- any existing tenant, leads, properties, channels pages/components
+- any existing backend integration for:
+  - /admin/onboard
   - tenants
   - leads
   - properties
-- I want minimum-change, clean evolution, not a big refactor
+  - channels
 
-Main goal:
-If the logged user is admin (`is_admin === true`), show admin pages.
-If the logged user is not admin, show tenant-only pages.
+Then implement the requested changes with MINIMUM necessary modifications.
 
-================================
-A) AUTH / PROFILE LOADING
-================================
+==================================================
+2) TARGET BEHAVIOR
+==================================================
 
-Please update the app so that after login it loads the current user profile from Supabase / backend and keeps in state:
+If logged user has:
+- is_admin === true -> show admin mode
+- is_admin === false -> show tenant mode
 
-- user id
-- email
-- tenant_id
+Admin user:
+- can access admin pages
+- can list tenants
+- can create tenant
+- can enable/disable tenant
+- can delete tenant
+- can view/filter leads by tenant
+- can view/filter properties by tenant
+
+Tenant user:
+- cannot access admin pages
+- can only access own tenant pages
+- can only see own tenant data
+- can manage only own notification channels
+
+==================================================
+3) AUTH / PROFILE SHARED STATE
+==================================================
+
+Implement a single shared auth/profile state using the current app patterns.
+
+Required state after login:
+- user.id
+- user.email
+- profile.tenant_id
+- profile.role
+- profile.is_admin
+
+Create or adapt a single context/provider/hook equivalent so the rest of the app can access:
+- current user
+- current profile
+- isAdmin
+- tenantId
 - role
-- is_admin
+- loading state
+- auth/profile error state
 
-I need a single auth/profile context or equivalent shared state so the rest of the app can know:
-- who is logged in
-- if user is admin
-- what tenant belongs to the user
-- what role the user has
-
-Important:
+Requirements:
 - do not assume every user is admin
 - do not assume tenant users can switch tenant
 - tenant users must always operate only on their own tenant
+- keep current login working
+- load profile right after auth/session is known
+- if profile is missing, show safe error state
 
-================================
-B) HEADER / USER BADGE
-================================
+Suggested shape:
+- AuthProvider
+- useAuth()
 
-Add a top-right user badge visible in the app with:
+Expose at least:
+- user
+- profile
+- isAdmin
+- tenantId
+- role
+- loading
+- refreshProfile()
 
-- a small circle/avatar with initials
-- user email or display name
+==================================================
+4) USER BADGE IN HEADER
+==================================================
+
+Add a top-right user badge visible in both admin and tenant mode.
+
+It must show:
+- small circle/avatar with initials
+- email or display name
 - role label
 
-Examples:
+Role label examples:
 - Admin
 - Owner
 - Manager
 - Agent
 - Viewer
 
-This should be visible in both admin and tenant mode.
+Implement as reusable component, for example:
+- components/UserBadge.jsx
 
-================================
-C) ROUTING / APP MODES
-================================
+Use role mapping for visual label:
+- if is_admin true => Admin
+- else use profile.role
 
-I want two navigation modes.
+==================================================
+5) ROUTING / APP MODES
+==================================================
 
-1. Admin mode (`is_admin === true`)
-Pages:
+Implement route guards or equivalent logic.
+
+Admin mode routes:
 - /admin/tenants
 - /admin/tenants/new
 - /admin/leads
 - /admin/properties
 
-2. Tenant mode (`is_admin === false`)
-Pages:
+Tenant mode routes:
 - /leads
 - /properties
 - /notifications
 
-Please implement route guards or equivalent logic:
-
+Behavior:
 - admin pages only for admin users
 - tenant pages for normal tenant users
-- if a tenant user tries to access admin pages, redirect or show 403
-- if admin lands in the app root, redirect to /admin/tenants
-- if tenant user lands in the app root, redirect to /leads
+- if tenant user hits admin page -> redirect to /leads or show 403
+- if admin lands on / -> redirect to /admin/tenants
+- if tenant user lands on / -> redirect to /leads
 
-Do not break existing auth flow.
+Do not break current auth flow.
 
-================================
-D) ADMIN MODE FEATURES
-================================
+Suggested components:
+- components/AdminRoute.jsx
+- components/TenantRoute.jsx
+- components/AppRedirect.jsx
 
-I want these admin pages:
+==================================================
+6) ADMIN MODE PAGES
+==================================================
 
---------------------------------
-1. Admin Tenants List
---------------------------------
+Create or adapt these pages cleanly:
 
-Page: /admin/tenants
-
-Show paginated table of tenants.
+A. /admin/tenants
+Paginated tenants table.
 
 Columns:
 - tenant name
@@ -124,21 +186,12 @@ Actions:
 - disable tenant
 - delete tenant
 
-Use backend API.
-If needed, implement/adapt these endpoints:
-- GET /admin/tenants?page=&pageSize=
-- PATCH /admin/tenants/:id/status
-- DELETE /admin/tenants/:id
-
 Pagination required.
 
---------------------------------
-2. Admin Create Tenant
---------------------------------
+B. /admin/tenants/new
+Create tenant form.
 
-Page: /admin/tenants/new
-
-Form fields:
+Fields:
 - tenant name
 - tenant slug
 - owner email
@@ -147,168 +200,97 @@ Form fields:
 - optional WhatsApp channel config
 - optional plan
 
-Submit should call backend onboarding endpoint:
-- POST /admin/onboard
+Submit:
+- call POST /admin/onboard
 
-Expected UX after success:
-- show confirmation
+Success UX:
+- show success message
 - show tenant_id
 - show owner email
-- allow quick link back to tenant list
+- quick link back to tenant list
 
-If notify email / whatsapp config is provided:
-- either send together if backend already supports it
-- or call channel creation after onboarding
+If notify email / WhatsApp config exists:
+- send in onboarding payload if backend supports it
+- otherwise create channels after onboarding
 
---------------------------------
-3. Admin Leads
---------------------------------
-
-Page: /admin/leads
-
-Show paginated table of leads.
+C. /admin/leads
+Paginated leads table.
 
 Requirements:
-- filter by tenant
-- pagination
 - admin can see all leads
-- optional tenant selector at top
-
-API should support:
-- GET /api/leads?page=&pageSize=&tenant_id=
-
---------------------------------
-4. Admin Properties
---------------------------------
-
-Page: /admin/properties
-
-Show paginated table of properties.
-
-Requirements:
 - filter by tenant
-- pagination
+- tenant selector at top if useful
+
+D. /admin/properties
+Paginated properties table.
+
+Requirements:
 - admin can see all properties
-- optional tenant selector at top
+- filter by tenant
+- tenant selector at top if useful
 
-API should support:
-- GET /api/properties?page=&pageSize=&tenant_id=
+==================================================
+7) TENANT MODE PAGES
+==================================================
 
---------------------------------
-5. Enable / Disable Tenant
---------------------------------
+Create or adapt these pages:
 
-In tenant list actions:
-- if active -> show Disable
-- if disabled -> show Enable
-
-Call:
-- PATCH /admin/tenants/:id/status
-
-Body:
-- { "status": "active" }
-- { "status": "disabled" }
-
-Update UI optimistically or refetch list.
-
---------------------------------
-6. Delete Tenant
---------------------------------
-
-In tenant list actions:
-- show Delete with confirmation modal
-
-Call:
-- DELETE /admin/tenants/:id
-
-Only admin can do this.
-
-================================
-E) TENANT MODE FEATURES
-================================
-
-I want tenant-only pages where the tenant user sees only its own data.
-
-Important rule:
-Frontend must not allow choosing tenant_id for tenant users.
-Backend must use authenticated tenant automatically.
-
---------------------------------
-1. Tenant Leads
---------------------------------
-
-Page: /leads
-
-Show only leads for current tenant user.
-
-Requirements:
+A. /leads
+- show only current tenant leads
 - paginated table
-- maybe simple search/filter
-- no tenant selector
-- use current tenant from auth
+- simple search/filter if easy
+- NO tenant selector
 
-API:
-- GET /api/leads?page=&pageSize=
-Backend should resolve tenant from logged user for non-admin users.
-
---------------------------------
-2. Tenant Properties
---------------------------------
-
-Page: /properties
-
-Show only properties for current tenant.
-
-Requirements:
+B. /properties
+- show only current tenant properties
 - paginated table
-- no tenant selector
-- use current tenant from auth
+- NO tenant selector
 
-API:
-- GET /api/properties?page=&pageSize=
-
---------------------------------
-3. Tenant Notifications
---------------------------------
-
-Page: /notifications
-
-Show and manage only the current tenant’s notification channels.
-
-Requirements:
+C. /notifications
+- show only current tenant channels
 - list channels
 - create channel
 - edit channel
 - activate/deactivate
 - mark default
 
-Use tenant-specific endpoints if they exist, or create/adapt them.
-Suggested backend endpoints:
-- GET /api/tenant/channels
-- POST /api/tenant/channels
-- PATCH /api/tenant/channels/:id
+Very important:
+Frontend must NOT allow tenant user to choose arbitrary tenant_id.
+Tenant user must operate only on authenticated tenant data.
 
-If backend already uses /admin/... for channels, do not expose admin endpoints directly to tenant UI unless they are secured correctly.
-Prefer tenant-specific endpoints for tenant users.
+==================================================
+8) API / SERVICES LAYER
+==================================================
 
-================================
-F) PAGINATION
-================================
+Keep API integration organized and minimal.
 
-Tenants, leads, and properties must be paginated.
+Suggested files:
+- services/adminApi.js
+- services/tenantApi.js
 
-Frontend:
-- page
-- pageSize
-- next/prev or page buttons
-- total count if available
+Reuse existing service structure if present.
 
-Backend:
-Please adapt endpoints so they return enough pagination data, for example:
-- items
-- total
-- page
-- pageSize
+Admin API methods needed:
+- onboardTenant(payload)
+- getTenants({ page, pageSize })
+- updateTenantStatus(id, status)
+- deleteTenant(id)
+- getAdminLeads({ page, pageSize, tenant_id })
+- getAdminProperties({ page, pageSize, tenant_id })
+- getTenantChannelsAdmin(tenantId)
+- createTenantChannelAdmin(tenantId, payload)
+- updateChannelAdmin(channelId, payload)
+
+Tenant API methods needed:
+- getTenantLeads({ page, pageSize, search })
+- getTenantProperties({ page, pageSize, search })
+- getTenantChannels()
+- createTenantChannel(payload)
+- updateTenantChannel(id, payload)
+
+==================================================
+9) PAGINATION
+==================================================
 
 Apply pagination to:
 - admin tenants
@@ -317,11 +299,85 @@ Apply pagination to:
 - tenant leads
 - tenant properties
 
-================================
-G) UI STRUCTURE
-================================
+Frontend requirements:
+- page
+- pageSize
+- next/prev or page buttons
+- total if available
 
-Please keep the change clean and minimal.
+Create reusable pagination component if useful:
+- components/Pagination.jsx
+
+Backend/API response shape should support:
+- items
+- total
+- page
+- pageSize
+
+If backend currently returns arrays only, minimally adapt it.
+
+==================================================
+10) BACKEND INTEGRATION RULES
+==================================================
+
+Use real existing backend endpoints where possible.
+
+Prefer these capabilities:
+
+Admin:
+- POST /admin/onboard
+- GET /admin/tenants?page=&pageSize=
+- PATCH /admin/tenants/:id/status
+- DELETE /admin/tenants/:id
+- GET /api/leads?page=&pageSize=&tenant_id=
+- GET /api/properties?page=&pageSize=&tenant_id=
+- GET /admin/tenants/:id/channels
+- POST /admin/tenants/:id/channels
+- PATCH /admin/channels/:channelId
+
+Tenant:
+- GET /api/leads?page=&pageSize=
+- GET /api/properties?page=&pageSize=
+- GET /api/tenant/channels
+- POST /api/tenant/channels
+- PATCH /api/tenant/channels/:id
+
+If some endpoints already exist:
+- reuse them
+
+If an endpoint is missing:
+- implement the smallest backend change needed
+- keep auth/security aligned with current backend model
+
+==================================================
+11) SECURITY / TENANT ISOLATION
+==================================================
+
+Critical rules:
+- tenant users must never see data from other tenants
+- tenant users must not be able to pass arbitrary tenant_id
+- backend must resolve tenant from authenticated user for non-admin flows
+- admin can filter by tenant_id
+- admin-only actions must remain admin-only
+
+If backend currently trusts tenant_id from client for normal users, fix it.
+
+==================================================
+12) UI / UX REQUIREMENTS
+==================================================
+
+Keep UI simple and consistent with the current app.
+
+Need:
+- loading states
+- empty states
+- error states
+- success feedback after mutations
+- confirmation modal or confirmation step for tenant delete
+- disable buttons during submission
+- optimistic update or refetch after enable/disable
+
+Do not dump everything into one Dashboard component.
 
 Suggested structure:
 - pages/AdminTenants.jsx
@@ -333,83 +389,50 @@ Suggested structure:
 - pages/TenantNotifications.jsx
 - components/UserBadge.jsx
 - components/Pagination.jsx
-- components/AdminRoute.jsx or equivalent
+- components/AdminRoute.jsx
 - services/adminApi.js
 - services/tenantApi.js
 
-You do not have to follow this exactly, but keep code organized and avoid putting everything into one Dashboard component.
+You do NOT have to match this exactly if the project already has a better equivalent structure.
+Prefer adapting current files over unnecessary duplication.
 
-================================
-H) BACKEND INTEGRATION
-================================
+==================================================
+13) IMPLEMENTATION STYLE
+==================================================
 
-Please use the real existing backend endpoints where possible.
+Please:
+- preserve existing patterns and naming where possible
+- do not introduce unnecessary libraries
+- avoid large-scale state-management refactor unless clearly needed
+- keep components small and readable
+- keep forms and tables practical
+- avoid dead code
+- remove obvious duplication if touched
 
-If an endpoint is missing, add the minimum backend change needed.
+==================================================
+14) OUTPUT REQUIRED
+==================================================
 
-I likely need these backend capabilities working cleanly:
+After completing the work, provide:
 
-Admin:
-- POST /admin/onboard
-- GET /admin/tenants
-- PATCH /admin/tenants/:id/status
-- DELETE /admin/tenants/:id
-- GET /api/leads?tenant_id=
-- GET /api/properties?tenant_id=
-- GET /admin/tenants/:id/channels
-- POST /admin/tenants/:id/channels
-- PATCH /admin/channels/:channelId
+1. Summary of what was implemented
+2. List of all changed files
+3. For each changed file, explain briefly what changed
+4. Any backend endpoints added/modified
+5. Any assumptions made
+6. Any TODOs left if something could not be fully completed
 
-Tenant:
-- GET /api/leads
-- GET /api/properties
-- GET /api/tenant/channels
-- POST /api/tenant/channels
-- PATCH /api/tenant/channels/:id
+Very important:
+Work directly on the real project files.
+Do not just describe the solution.
+Actually implement the changes.
+ 
 
-If some of these already exist, reuse them.
-If not, implement the missing ones with minimal change.
-
-================================
-I) IMPORTANT RULES
-================================
-
-- Do not break current login
-- Do not break existing dashboard pages unnecessarily
-- Do not do a big rewrite
-- Keep changes incremental and production-friendly
-- Respect current auth/profile model:
-  - tenant_id
-  - role
-  - is_admin
-- Admin can see all tenants and filter data by tenant
-- Tenant users can only see and manage their own data
-- Add clear loading / error / success states
-- Show me all changed files at the end
-- If backend changes are needed, implement them too
-
-================================
-J) EXPECTED RESULT
-================================
-
-After this work, I want:
-
-Admin user:
-- logs in
-- sees user badge with name/email and role
-- can create tenant
-- can list tenants
-- can enable/disable/delete tenants
-- can view leads and properties filtered by tenant
-- all paginated
-
-Tenant user:
-- logs in
-- sees user badge with name/email and role
-- can only see own leads
-- can only see own properties
-- can configure own notifications
-- all paginated where applicable
-
-Please work directly on the real project files and keep the implementation simple and clean.
+ 
+Important execution mode:
+- First inspect the codebase and detect what already exists
+- Then implement only the necessary changes
+- Keep diffs small
+- Do not replace the whole app structure
+- Show final changed files list at the end
  

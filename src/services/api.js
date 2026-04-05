@@ -10,15 +10,53 @@ const api = axios.create({
   },
 })
 
+let cachedAccessToken = null
+let tokenFetchedAt = 0
+const TOKEN_CACHE_TTL_MS = 5000
+let lastRefreshAttemptAt = 0
+
+const getAccessToken = async () => {
+  if (!supabase) {
+    return null
+  }
+
+  const now = Date.now()
+  if (cachedAccessToken && now - tokenFetchedAt < TOKEN_CACHE_TTL_MS) {
+    return cachedAccessToken
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  let token = session?.access_token || null
+
+  if (!token && now - lastRefreshAttemptAt > TOKEN_CACHE_TTL_MS) {
+    lastRefreshAttemptAt = now
+    try {
+      const {
+        data: { session: refreshedSession },
+      } = await supabase.auth.refreshSession()
+      token = refreshedSession?.access_token || null
+    } catch (_error) {
+      token = null
+    }
+  }
+
+  cachedAccessToken = token
+  tokenFetchedAt = now
+  return cachedAccessToken
+}
+
 // Request interceptor to add Bearer token and source type
 api.interceptors.request.use(
   async (config) => {
     // Get the current session from Supabase
     if (supabase) {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.access_token) {
-          config.headers.Authorization = `Bearer ${session.access_token}`
+        const token = await getAccessToken()
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`
         }
       } catch (error) {
         console.error('Error getting session:', error)
@@ -116,12 +154,19 @@ export const normalizePaginatedResponse = (data, fallbackPage = 1, fallbackPageS
     data?.pagination?.pageSize ??
     data?.pagination?.limit ??
     fallbackPageSize
+  const totalPages =
+    data?.totalPages ??
+    data?.total_pages ??
+    data?.pagination?.totalPages ??
+    data?.meta?.totalPages ??
+    Math.max(1, Math.ceil((total || 0) / pageSize))
 
   return {
     items,
     total,
     page,
     pageSize,
+    totalPages,
   }
 }
 

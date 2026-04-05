@@ -18,8 +18,13 @@ export const onboardTenant = async (payload) => {
 }
 
 export const getTenants = async ({ page = 1, pageSize = 10 } = {}) => {
-  const response = await api.get('/admin/tenants', { params: { page, pageSize } })
+  const response = await api.get('/admin/tenants', { params: { page, pageSize, limit: pageSize } })
   return normalizePaginatedResponse(response.data, page, pageSize)
+}
+
+export const getTenantPlans = async () => {
+  const response = await api.get('/admin/tenant-plans')
+  return response.data?.items || response.data || []
 }
 
 export const updateTenantStatus = async (id, status) => {
@@ -33,7 +38,7 @@ export const deleteTenant = async (id) => {
 }
 
 export const getAdminLeads = async ({ page = 1, pageSize = 10, tenant_id = '' } = {}) => {
-  const params = { page, pageSize }
+  const params = { page, pageSize, limit: pageSize }
   if (tenant_id) {
     params.tenant_id = tenant_id
   }
@@ -43,7 +48,7 @@ export const getAdminLeads = async ({ page = 1, pageSize = 10, tenant_id = '' } 
 }
 
 export const getAdminProperties = async ({ page = 1, pageSize = 10, tenant_id = '' } = {}) => {
-  const params = { page, pageSize }
+  const params = { page, pageSize, limit: pageSize }
   if (tenant_id) {
     params.tenant_id = tenant_id
   }

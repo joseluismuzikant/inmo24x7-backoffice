@@ -1,6 +1,6 @@
 # Inmo24x7 Backoffice
 
-Backoffice moderno para la gestión de leads y configuración del agente IA inmo24x7.
+Backoffice multi-tenant para administración global (admin) y operación por tenant.
 
 <div align="center">
 
@@ -28,11 +28,19 @@ inmo24x7-backoffice/
 │   │   ├── Layout.jsx
 │   │   └── ChatSimulator.jsx
 │   ├── pages/               # Páginas principales
-│   │   ├── Dashboard.jsx
-│   │   └── Login.jsx
+│   │   ├── Login.jsx
+│   │   ├── AdminTenants.jsx
+│   │   ├── AdminTenantCreate.jsx
+│   │   ├── AdminLeads.jsx
+│   │   ├── AdminProperties.jsx
+│   │   ├── TenantLeads.jsx
+│   │   ├── TenantProperties.jsx
+│   │   └── TenantNotifications.jsx
 │   ├── services/            # Servicios de API
 │   │   ├── supabaseClient.js
-│   │   └── api.js
+│   │   ├── api.js
+│   │   ├── adminApi.js
+│   │   └── tenantApi.js
 │   ├── App.jsx              # Router y rutas
 │   ├── main.jsx             # Entry point
 │   └── index.css            # Estilos globales
@@ -85,18 +93,34 @@ El sistema usa Supabase Auth con las siguientes características:
 
 ## 📊 Funcionalidades
 
-### Dashboard
-- **Gestión de Leads:** Tabla con listado, filtros y eliminación
-- **Base de Conocimiento:** Drag & drop de archivos Excel/JSON
-- **Configuración de Notificaciones:** Toggles para WhatsApp, Email y Calendar
-- **Simulador de Chat:** Panel lateral para probar el agente IA
+### Admin
+- Crear tenant + owner desde onboarding
+- Listar tenants con paginación
+- Habilitar/deshabilitar tenant
+- Eliminar tenant (con errores claros si está bloqueado por datos relacionados)
+- Gestionar canales por tenant (email / WhatsApp)
+- Ver leads y properties globales con paginación y filtro por tenant
+
+### Tenant
+- Ver leads paginados
+- Ver properties paginadas
+- Gestionar canales de notificación propios
 
 ### Endpoints API
 
 ```
-GET    /api/leads          # Listar leads
-DELETE /api/leads/:id      # Eliminar lead
-POST   /message            # Enviar mensaje al bot
+POST   /admin/onboard                     # Onboarding tenant + owner
+GET    /admin/tenants                     # Tenants paginados
+PATCH  /admin/tenants/:id/status          # Enable/disable
+DELETE /admin/tenants/:id                 # Delete guarded
+GET    /admin/tenants/:id/channels        # Listar canales de tenant
+POST   /admin/tenants/:id/channels        # Crear canal de tenant
+PATCH  /admin/channels/:channelId         # Actualizar canal
+GET    /api/leads                         # Leads paginados
+GET    /api/properties                    # Properties paginadas
+GET    /api/tenant/channels               # Canales del tenant autenticado
+POST   /api/tenant/channels               # Crear canal del tenant
+PATCH  /api/tenant/channels/:channelId    # Actualizar canal del tenant
 ```
 
 ## 🛠️ Comandos
