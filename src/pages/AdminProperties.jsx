@@ -19,7 +19,7 @@ const AdminProperties = () => {
   useEffect(() => {
     const loadTenants = async () => {
       try {
-        const result = await getTenants({ page: 1, pageSize: 200 })
+        const result = await getTenants({ page: 1, pageSize: 50 })
         setTenants(result.items || [])
       } catch (_error) {
         setTenants([])
@@ -110,7 +110,7 @@ const AdminProperties = () => {
                 {rows.map((property) => (
                   <tr key={property.id} className="border-b">
                     <td className="px-2 py-3">{property.code || property.id}</td>
-                    <td className="px-2 py-3">{property.tenant_id || '-'}</td>
+                    <td className="px-2 py-3">{property.tenant_name || property.tenantName || property.tenant_id || property.tenantId || '-'}</td>
                     <td className="px-2 py-3">{property.tipo || property.type || '-'}</td>
                     <td className="px-2 py-3">{property.zona || property.zone || '-'}</td>
                     <td className="px-2 py-3">{property.precio || property.price || '-'}</td>

@@ -4,6 +4,7 @@ import { getProfile } from '../services/api'
 
 const isSupabaseAuthEnabled = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true'
 const PROFILE_CACHE_KEY = 'backoffice_profile_cache_v1'
+const PROFILE_REQUEST_TIMEOUT_MS = 8000
 
 const AuthContext = createContext(null)
 
@@ -75,7 +76,12 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const profileData = await getProfile()
+      const profileData = await Promise.race([
+        getProfile(),
+        new Promise((_, reject) => {
+          window.setTimeout(() => reject(new Error('Profile request timeout')), PROFILE_REQUEST_TIMEOUT_MS)
+        }),
+      ])
       const nextProfile = normalizeProfile(profileData, sessionUser)
       if (!nextProfile.tenant_id && !nextProfile.is_admin) {
         setError('No se pudo resolver tenant_id para este usuario')
@@ -136,7 +142,7 @@ export const AuthProvider = ({ children }) => {
 
       const nextUser = session?.user || null
       const isSameUser = nextUser?.id && nextUser.id === currentUserIdRef.current
-      if (_event === 'TOKEN_REFRESHED' || (_event === 'INITIAL_SESSION' && initializedRef.current && isSameUser)) {
+      if (_event === 'TOKEN_REFRESHED' || (_event === 'INITIAL_SESSION' && initializedRef.current && isSameUser) || (_event === 'SIGNED_IN' && isSameUser)) {
         return
       }
 
@@ -144,10 +150,17 @@ export const AuthProvider = ({ children }) => {
         setLoading(true)
       }
 
-      await loadProfile(nextUser)
-      if (mounted) {
-        initializedRef.current = true
-        setLoading(false)
+      try {
+        await loadProfile(nextUser)
+      } catch (authChangeError) {
+        if (mounted) {
+          setError(authChangeError?.message || 'No se pudo actualizar la sesion')
+        }
+      } finally {
+        if (mounted) {
+          initializedRef.current = true
+          setLoading(false)
+        }
       }
     })
 

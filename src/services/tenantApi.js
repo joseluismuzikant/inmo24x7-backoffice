@@ -13,7 +13,7 @@ const getWithOptionalPagination = async (url, params) => {
 }
 
 export const getTenantLeads = async ({ page = 1, pageSize = 10, search = '' } = {}) => {
-  const params = { page, pageSize }
+  const params = { page, pageSize, limit: pageSize }
   if (search) {
     params.search = search
   }
@@ -23,7 +23,7 @@ export const getTenantLeads = async ({ page = 1, pageSize = 10, search = '' } = 
 }
 
 export const getTenantProperties = async ({ page = 1, pageSize = 10, search = '' } = {}) => {
-  const params = { page, pageSize }
+  const params = { page, pageSize, limit: pageSize }
   if (search) {
     params.search = search
   }
