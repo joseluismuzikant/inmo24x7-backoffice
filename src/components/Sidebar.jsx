@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Building2, Database, BellRing, LogOut, Menu, X, Users, PlusSquare, FileText } from 'lucide-react'
+import { Building2, Database, BellRing, LogOut, Menu, X, Users, PlusSquare, FileText, House } from 'lucide-react'
 import { signOut } from '../services/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import '../styles/Sidebar.css'
@@ -45,12 +45,15 @@ const Sidebar = () => {
 
   const menuItems = isAdmin
     ? [
+        { to: '/admin/home', icon: House, label: 'Home' },
         { to: '/admin/tenants', icon: Building2, label: 'Tenants' },
         { to: '/admin/tenants/new', icon: PlusSquare, label: 'Crear tenant' },
         { to: '/admin/leads', icon: FileText, label: 'Leads' },
         { to: '/admin/properties', icon: Users, label: 'Propiedades' },
+        { to: '/admin/channels', icon: BellRing, label: 'Canales' },
       ]
     : [
+        { to: '/', icon: House, label: 'Home' },
         { to: '/leads', icon: FileText, label: 'Leads' },
         { to: '/properties', icon: Database, label: 'Propiedades' },
         { to: '/notifications', icon: BellRing, label: 'Notificaciones' },

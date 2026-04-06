@@ -21,14 +21,22 @@ describe('ChatSimulator', () => {
   it('sends a message and renders assistant response', async () => {
     sendMessageMock.mockResolvedValue({ messages: ['Respuesta de prueba'] })
 
-    render(<ChatSimulator isOpen onClose={() => {}} />)
+    render(
+      <ChatSimulator
+        isOpen
+        onClose={() => {}}
+        tenantOptions={[{ id: 'tenant-1', name: 'Tenant 1' }]}
+        selectedTenantId="tenant-1"
+        onTenantChange={() => {}}
+      />,
+    )
 
     const input = screen.getByPlaceholderText('Envía un mensaje...')
     fireEvent.change(input, { target: { value: 'Hola' } })
     fireEvent.keyPress(input, { key: 'Enter', code: 'Enter', charCode: 13 })
 
     await waitFor(() => {
-      expect(sendMessageMock).toHaveBeenCalledWith('test-user-123', 'Hola')
+      expect(sendMessageMock).toHaveBeenCalledWith(expect.stringMatching(/^test-user-/), 'Hola', 'tenant-1')
     })
     expect(screen.getByText('Respuesta de prueba')).toBeInTheDocument()
   })

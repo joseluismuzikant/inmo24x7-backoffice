@@ -57,6 +57,20 @@ export const getAdminProperties = async ({ page = 1, pageSize = 10, tenant_id = 
   return normalizePaginatedResponse(response.data, page, pageSize)
 }
 
+export const importAdminPropertiesJson = async ({ tenantId, properties }) => {
+  const payload = {
+    tenant_id: tenantId,
+    properties,
+  }
+  const response = await api.post('/api/properties/import-json', payload)
+  return response.data
+}
+
+export const deleteAdminProperty = async (id) => {
+  const response = await api.delete(`/api/properties/${id}`)
+  return response.data
+}
+
 export const getTenantChannelsAdmin = async (tenantId) => {
   const response = await api.get(`/admin/tenants/${tenantId}/channels`)
   return response.data?.items || response.data || []
