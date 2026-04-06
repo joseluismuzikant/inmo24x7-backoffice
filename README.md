@@ -128,9 +128,22 @@ PATCH  /api/tenant/channels/:channelId    # Actualizar canal del tenant
 ```bash
 npm run dev      # Iniciar servidor de desarrollo
 npm run build    # Compilar para producción
+npm run test      # Ejecutar tests en modo watch
+npm run test:run  # Ejecutar tests una vez (CI)
 npm run preview  # Previsualizar build de producción
 npm run lint     # Ejecutar linter
 ```
+
+## ✅ Tests
+
+El proyecto incluye unit tests para componentes en `src/components` con Vitest + Testing Library.
+
+```bash
+npm install
+npm run test:run
+```
+
+En CI/CD, el workflow de deploy ejecuta tests antes del build de Docker; si fallan, no se publica imagen.
 
 ## 🐳 Docker Deployment
 
