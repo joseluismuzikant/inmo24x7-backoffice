@@ -23,7 +23,7 @@ const AppRedirect = () => {
     return <div className="p-6 text-red-600">Perfil de usuario no disponible.</div>
   }
 
-  return <Navigate to={isAdmin ? '/admin/tenants' : '/leads'} replace />
+  return <Navigate to={isAdmin ? '/admin/home' : '/leads'} replace />
 }
 
 export default AppRedirect

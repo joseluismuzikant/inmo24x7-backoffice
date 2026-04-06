@@ -32,6 +32,11 @@ export const getTenantProperties = async ({ page = 1, pageSize = 10, search = ''
   return normalizePaginatedResponse(response.data, page, pageSize)
 }
 
+export const importTenantPropertiesJson = async ({ properties }) => {
+  const response = await api.post('/api/properties/import-json', { properties })
+  return response.data
+}
+
 export const getTenantChannels = async () => {
   const response = await api.get('/api/tenant/channels')
   return response.data?.items || response.data || []

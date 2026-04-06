@@ -23,9 +23,11 @@ describe('Sidebar', () => {
       </MemoryRouter>,
     )
 
+    expect(screen.getByText('Home')).toBeInTheDocument()
     expect(screen.getByText('Tenants')).toBeInTheDocument()
     expect(screen.getByText('Crear tenant')).toBeInTheDocument()
     expect(screen.getByText('Propiedades')).toBeInTheDocument()
+    expect(screen.getByText('Canales')).toBeInTheDocument()
   })
 
   it('renders tenant menu links', () => {
@@ -37,6 +39,7 @@ describe('Sidebar', () => {
       </MemoryRouter>,
     )
 
+    expect(screen.getByText('Home')).toBeInTheDocument()
     expect(screen.getByText('Leads')).toBeInTheDocument()
     expect(screen.getByText('Notificaciones')).toBeInTheDocument()
   })

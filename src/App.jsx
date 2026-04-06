@@ -1,7 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Login from './pages/Login'
+import AdminHome from './pages/AdminHome'
 import AdminTenants from './pages/AdminTenants'
 import AdminTenantCreate from './pages/AdminTenantCreate'
+import AdminChannels from './pages/AdminChannels'
 import AdminLeads from './pages/AdminLeads'
 import AdminProperties from './pages/AdminProperties'
 import TenantLeads from './pages/TenantLeads'
@@ -57,6 +59,16 @@ function App() {
         />
 
         <Route
+          path="/admin/home"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminHome />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/tenants"
           element={
             <ProtectedRoute>
@@ -72,6 +84,16 @@ function App() {
             <ProtectedRoute>
               <AdminRoute>
                 <AdminTenantCreate />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/channels"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminChannels />
               </AdminRoute>
             </ProtectedRoute>
           }

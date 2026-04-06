@@ -94,17 +94,21 @@ El sistema usa Supabase Auth con las siguientes características:
 ## 📊 Funcionalidades
 
 ### Admin
+- Home admin con simulador de chatbot y selector de tenant
 - Crear tenant + owner desde onboarding
 - Listar tenants con paginación
 - Habilitar/deshabilitar tenant
 - Eliminar tenant (con errores claros si está bloqueado por datos relacionados)
 - Gestionar canales por tenant (email / WhatsApp)
 - Ver leads y properties globales con paginación y filtro por tenant
+- Importar propiedades por archivo JSON para un tenant seleccionado
+- Eliminar propiedades en lote desde la grilla de propiedades
 
 ### Tenant
 - Ver leads paginados
 - Ver properties paginadas
 - Gestionar canales de notificación propios
+- Importar propiedades por JSON para su propio tenant
 
 ### Endpoints API
 
@@ -118,6 +122,8 @@ POST   /admin/tenants/:id/channels        # Crear canal de tenant
 PATCH  /admin/channels/:channelId         # Actualizar canal
 GET    /api/leads                         # Leads paginados
 GET    /api/properties                    # Properties paginadas
+POST   /api/properties/import-json        # Importar properties por JSON
+DELETE /api/properties/:id                # Eliminar property
 GET    /api/tenant/channels               # Canales del tenant autenticado
 POST   /api/tenant/channels               # Crear canal del tenant
 PATCH  /api/tenant/channels/:channelId    # Actualizar canal del tenant

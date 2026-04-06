@@ -3,12 +3,12 @@ import { X, Bot, User, Send } from 'lucide-react'
 import { sendMessage } from '../services/api'
 import '../styles/ChatSimulator.css'
 
-const ChatSimulator = ({ isOpen, onClose }) => {
+const ChatSimulator = ({ isOpen, onClose, tenantOptions = [], selectedTenantId = '', onTenantChange = null }) => {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: '¡Hola! Soy tu agente IA. ¿En qué puedo ayudarte hoy?' }
   ])
   const [inputMessage, setInputMessage] = useState('')
-  const [userId, setUserId] = useState('test-user-123')
+  const [userId, setUserId] = useState(() => `test-user-${Date.now()}`)
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
 
@@ -23,13 +23,21 @@ const ChatSimulator = ({ isOpen, onClose }) => {
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return
 
+    if (!selectedTenantId) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Selecciona un tenant antes de enviar mensajes.'
+      }])
+      return
+    }
+
     const userMessage = inputMessage.trim()
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setInputMessage('')
     setIsLoading(true)
 
     try {
-      const response = await sendMessage(userId, userMessage)
+      const response = await sendMessage(userId, userMessage, selectedTenantId)
       
       if (response.messages && response.messages.length > 0) {
         const botMessages = response.messages.map(msg => ({
@@ -156,6 +164,25 @@ const ChatSimulator = ({ isOpen, onClose }) => {
       </div>
 
       <div className="chat-input-container">
+        {tenantOptions.length > 0 ? (
+          <div className="mb-3">
+            <label className="chat-input-label">
+              Tenant
+            </label>
+            <select
+              value={selectedTenantId}
+              onChange={(e) => onTenantChange?.(e.target.value)}
+              className="chat-input"
+            >
+              {tenantOptions.map((tenant) => (
+                <option key={tenant.id} value={tenant.id}>
+                  {tenant.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+
         <div className="mb-3">
           <label className="chat-input-label">
             User ID de prueba

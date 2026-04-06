@@ -175,8 +175,8 @@ export const deleteLead = async (id) => {
   return response.data
 }
 
-export const sendMessage = async (userId, text) => {
-  const response = await api.post('/message', { userId, text })
+export const sendMessage = async (userId, text, tenantId) => {
+  const response = await api.post('/message', { userId, text, tenantId })
   return response.data
 }
 

@@ -16,18 +16,18 @@ describe('AppRedirect', () => {
     expect(screen.getByText('Cargando aplicacion...')).toBeInTheDocument()
   })
 
-  it('redirects admin to admin tenants screen', () => {
+  it('redirects admin to admin home screen', () => {
     mockUseAuth.mockReturnValue({ loading: false, profile: { id: '1' }, isAdmin: true, error: null })
 
     render(
       <MemoryRouter initialEntries={['/']}>
         <Routes>
           <Route path="/" element={<AppRedirect />} />
-          <Route path="/admin/tenants" element={<div>Admin Tenants</div>} />
+          <Route path="/admin/home" element={<div>Admin Home</div>} />
         </Routes>
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Admin Tenants')).toBeInTheDocument()
+    expect(screen.getByText('Admin Home')).toBeInTheDocument()
   })
 })
